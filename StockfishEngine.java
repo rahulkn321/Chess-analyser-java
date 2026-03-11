@@ -1,0 +1,152 @@
+package chessanalyser;
+
+import java.io.*;
+
+public class StockfishEngine {
+
+    private Process engine;
+    private BufferedWriter writer;
+    private BufferedReader reader;
+
+    public void startEngine() throws Exception {
+
+    	ProcessBuilder pb = new ProcessBuilder("C:\\stockfish\\stockfish.exe");
+        engine = pb.start();
+
+        writer = new BufferedWriter(
+                new OutputStreamWriter(engine.getOutputStream()));
+
+        reader = new BufferedReader(
+                new InputStreamReader(engine.getInputStream()));
+        
+        sendCommand("uci");
+        waitFor("uciok");
+
+        sendCommand("isready");
+        waitFor("readyok");
+
+        sendCommand("ucinewgame");
+    }
+
+    public void sendCommand(String command) throws Exception {
+
+        writer.write(command + "\n");
+        writer.flush();
+    }
+
+    public String getOutput() throws Exception {
+
+        String line;
+        StringBuilder output = new StringBuilder();
+
+        while ((line = reader.readLine()) != null) {
+
+            output.append(line).append("\n");
+
+            if (line.startsWith("bestmove"))
+                break;
+        }
+
+        return output.toString();
+    }
+    
+    public String analysePosition(String fen) throws Exception {
+
+    	 sendCommand("isready");         
+         waitFor("readyok");                
+
+         sendCommand("position fen " + fen);
+         sendCommand("go depth 15"); 
+
+        return getOutput();
+    }
+    
+    public String bestmove(String fen) throws Exception{
+    	String bmove = "";
+    	String line;
+    	 sendCommand("isready");            
+         waitFor("readyok");                
+
+         sendCommand("position fen " + fen);
+         sendCommand("go depth 15"); 
+    	while ((line = reader.readLine()) != null) {
+
+    	    if (line.startsWith("bestmove")) {
+    	        bmove = line.split(" ")[1];
+    	        break;
+    	    }
+    	}
+    	return bmove;
+    }
+    
+    public double evaluatePosition(String fen) throws Exception {
+
+    	 sendCommand("isready");            
+         waitFor("readyok");                
+
+         sendCommand("position fen " + fen);
+         sendCommand("go depth 15"); 
+    	
+        String line;
+        double eval = 0;
+        
+        boolean isMate = false;                            
+
+        String sideToMove = fen.split(" ")[1];
+
+        while ((line = reader.readLine()) != null) {
+
+            if (line.contains("score cp")) {
+
+            	String[] parts = line.split("score cp ");
+
+                String value = parts[1].split(" ")[0];
+
+                int centipawn = Integer.parseInt(value);
+
+                eval = centipawn / 100.0;
+            }
+            
+//            if (line.contains("score mate")) {
+//
+//                String[] parts = line.split("score mate ");
+//
+//                mateIn = Integer.parseInt(parts[1].split(" ")[0]);
+//
+//                isMate = true;
+//            }
+//            
+
+            if (line.startsWith("bestmove")) {
+                break;
+            }
+        }
+        
+        if (sideToMove.equals("b") && !isMate) {
+            eval = -eval;
+        }
+        
+//        if (isMate) {
+//
+//            if (mateIn > 0)
+//                eval = 1000 - mateIn;
+//
+//            else
+//                eval = -1000 - mateIn;
+//        }
+
+        return eval;
+    }
+    
+    private void waitFor(String keyword) throws Exception {  
+
+        String line;
+
+        while ((line = reader.readLine()) != null) {
+
+            if (line.contains(keyword))
+                break;
+        }
+
+}
+}
