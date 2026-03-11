@@ -7,7 +7,7 @@ A chess game analyzer built in Java that processes PGN games and evaluates moves
 - Integration with Stockfish chess engine
 
 ## Project Structure
-chessanalyser
+src
 - ChessAnalyser.java – Main program that starts the analysis  
 - PGNProcessor.java – Parses PGN moves  
 - StockfishEngine.java – Communicates with Stockfish engine  
