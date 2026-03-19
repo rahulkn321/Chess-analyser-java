@@ -28,7 +28,7 @@ src
 - Evaluation bar
 - Graph of move quality
 - JavaFX graphical interface
-- Game statistics and blunder detection
+- Game statistics and Evaluation graph
 
 ## Credits
 This project uses the chesslib Java library for chess board representation and move generation.
